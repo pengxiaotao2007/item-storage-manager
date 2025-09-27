@@ -1,0 +1,96 @@
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#3b82f6" />
+    <meta name="description" content="智能物品存放位置记录与查询管理系统" />
+    <title>物品存放管理系统</title>
+    
+    <!-- PWA相关 -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="物品管理" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.5.0/remixicon.min.css">
+    <script type="module" src="/preview-inject/index.ts"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- PWA安装提示和Service Worker注册 -->
+    <script>
+      // 注册Service Worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('SW registered: ', registration);
+            })
+            .catch((registrationError) => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+
+      // PWA安装提示
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        // 显示安装提示
+        const installBanner = document.createElement('div');
+        installBanner.id = 'install-banner';
+        installBanner.innerHTML = `
+          <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: #3b82f6; color: white; padding: 16px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1000; display: flex; align-items: center; justify-content: space-between;">
+            <div style="flex: 1;">
+              <div style="font-weight: 600; margin-bottom: 4px;">安装到桌面</div>
+              <div style="font-size: 14px; opacity: 0.9;">将应用添加到主屏幕，获得更好的使用体验</div>
+            </div>
+            <div style="display: flex; gap: 8px; margin-left: 16px;">
+              <button id="install-btn" style="background: white; color: #3b82f6; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer;">安装</button>
+              <button id="dismiss-btn" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer;">×</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(installBanner);
+
+        // 安装按钮事件
+        document.getElementById('install-btn').addEventListener('click', () => {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+              console.log('用户接受了安装提示');
+            }
+            deferredPrompt = null;
+            document.getElementById('install-banner').remove();
+          });
+        });
+
+        // 关闭按钮事件
+        document.getElementById('dismiss-btn').addEventListener('click', () => {
+          document.getElementById('install-banner').remove();
+        });
+      });
+
+      // 安装完成后隐藏提示
+      window.addEventListener('appinstalled', () => {
+        console.log('PWA已安装');
+        const banner = document.getElementById('install-banner');
+        if (banner) {
+          banner.remove();
+        }
+      });
+    </script>
+  </body>
+</html>
